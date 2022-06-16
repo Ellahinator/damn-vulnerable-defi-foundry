@@ -11,7 +11,7 @@
 Visit [damnvulnerabledefi.xyz](https://damnvulnerabledefi.xyz)
 
 ### Acknowledgement
-*Big thanks to [Tincho](https://twitter.com/tinchoabbate) who created the [first version of this game](https://github.com/tinchoabbate/damn-vulnerable-defi/tree/v2.0.0) and to all the fellows behind the [Foundry Framework](https://github.com/gakonst/foundry/graphs/contributors)*
+*Big thanks to [Tincho](https://twitter.com/tinchoabbate) who created the [first version of this game](https://github.com/tinchoabbate/damn-vulnerable-defi/tree/v2.0.0), [Nicolas Garcia](https://github.com/nicolasgarcia214/damn-vulnerable-defi-foundry) and to all the fellows behind the [Foundry Framework](https://github.com/gakonst/foundry/graphs/contributors)*
 
 Damn Vulnerable DeFi is the wargame to learn offensive security of DeFi smart contracts.
 
@@ -36,29 +36,17 @@ Advanced ways to use `foundryup`, and other documentation, can be found in the [
 
 2. **Clone This Repo and install dependencies**
 ``` 
-git clone https://github.com/nicolasgarcia214/damn-vulnerable-defi-foundry.git
+git clone -b solutions https://github.com/Ellahinator/damn-vulnerable-defi-foundry.git
 cd damn-vulnerable-defi-foundry
 forge install
 yarn install
 ```
-3. **Code your solutions in the provided `[NAME_OF_THE_LEVEL].t.sol` files (inside each level's folder in the test folder)**
-4. **Run your exploit for a challenge**
+3. **Run tests**
 ```
-make [CONTRACT_LEVEL_NAME]
+forge test
 ```
 or
 ```
-./run.sh [LEVEL_FOLDER_NAME]
-./run.sh [CHALLENGE_NUMBER]
-./run.sh [4_FIRST_LETTER_OF_NAME] 
+forge test --match-contract [CONTRACT_LEVEL_NAME]
 ```
-If the challenge is executed successfully, you've passed!🙌🙌
 
-### Tips and tricks ✨
-- In all challenges you must use the account called attacker. In Forge, you can use the [cheat code](https://github.com/gakonst/foundry/tree/master/forge#cheat-codes) `prank` or `startPrank`.
-- To code the solutions, you may need to refer to [Forge docs](https://onbjerg.github.io/foundry-book/forge/index.html).
-- In some cases, you may need to code and deploy custom smart contracts.
-
-### Preinstalled dependencies
-
-`ds-test` for testing, `forge-std` for better cheatcode UX, and `openzeppelin-contracts` for contract implementations. 

